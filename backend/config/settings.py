@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     # Local apps
     'stocks',
     'notifications',
+    'users',
 ]
 
 MIDDLEWARE = [

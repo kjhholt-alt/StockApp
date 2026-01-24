@@ -9,9 +9,22 @@ from .models import Stock, PriceData, ATRAnalysis, Alert
 class StockSerializer(serializers.ModelSerializer):
     """Serializer for Stock model."""
 
+    days_until_earnings = serializers.SerializerMethodField()
+
     class Meta:
         model = Stock
-        fields = ['id', 'symbol', 'name', 'stock_type', 'is_active', 'created_at', 'updated_at']
+        fields = [
+            'id', 'symbol', 'name', 'stock_type', 'is_active',
+            'next_earnings_date', 'earnings_time', 'days_until_earnings',
+            'created_at', 'updated_at'
+        ]
+
+    def get_days_until_earnings(self, obj):
+        if obj.next_earnings_date:
+            from datetime import date
+            delta = obj.next_earnings_date - date.today()
+            return delta.days if delta.days >= 0 else None
+        return None
 
 
 class PriceDataSerializer(serializers.ModelSerializer):
@@ -32,16 +45,24 @@ class ATRAnalysisSerializer(serializers.ModelSerializer):
 
     symbol = serializers.CharField(source='stock.symbol', read_only=True)
     stock_name = serializers.CharField(source='stock.name', read_only=True)
+    rvol_display = serializers.SerializerMethodField()
 
     class Meta:
         model = ATRAnalysis
         fields = [
             'id', 'symbol', 'stock_name', 'date',
             'current_atr', 'current_daily_range', 'consecutive_tight_days',
-            'avg_volume_20d', 'current_volume', 'volume_ratio',
+            'avg_volume_20d', 'current_volume', 'volume_ratio', 'rvol_display',
             'is_consolidating', 'volume_spike_detected', 'breakout_probability',
+            'confidence_score', 'range_tightness_pct',
             'price_at_analysis', 'created_at'
         ]
+
+    def get_rvol_display(self, obj):
+        """Format volume ratio as percentage string (e.g., '150% of avg')"""
+        if obj.volume_ratio:
+            return f"{int(obj.volume_ratio * 100)}% of avg"
+        return None
 
 
 class AlertSerializer(serializers.ModelSerializer):
@@ -102,6 +123,10 @@ class DashboardStockSerializer(serializers.ModelSerializer):
     breakout_probability = serializers.SerializerMethodField()
     price_change = serializers.SerializerMethodField()
     price_change_percent = serializers.SerializerMethodField()
+    confidence_score = serializers.SerializerMethodField()
+    rvol_display = serializers.SerializerMethodField()
+    range_tightness_pct = serializers.SerializerMethodField()
+    days_until_earnings = serializers.SerializerMethodField()
 
     class Meta:
         model = Stock
@@ -109,7 +134,9 @@ class DashboardStockSerializer(serializers.ModelSerializer):
             'id', 'symbol', 'name', 'stock_type',
             'current_price', 'price_change', 'price_change_percent',
             'atr', 'daily_range', 'consecutive_tight_days',
-            'is_consolidating', 'volume_spike', 'breakout_probability'
+            'is_consolidating', 'volume_spike', 'breakout_probability',
+            'confidence_score', 'rvol_display', 'range_tightness_pct',
+            'next_earnings_date', 'days_until_earnings'
         ]
 
     def get_current_price(self, obj):
@@ -151,6 +178,29 @@ class DashboardStockSerializer(serializers.ModelSerializer):
         if len(prices) >= 2 and prices[1].close:
             change = prices[0].close - prices[1].close
             return float((change / prices[1].close) * 100)
+        return None
+
+    def get_confidence_score(self, obj):
+        analysis = obj.atr_analyses.first()
+        return analysis.confidence_score if analysis else 0
+
+    def get_rvol_display(self, obj):
+        analysis = obj.atr_analyses.first()
+        if analysis and analysis.volume_ratio:
+            return f"{int(analysis.volume_ratio * 100)}%"
+        return None
+
+    def get_range_tightness_pct(self, obj):
+        analysis = obj.atr_analyses.first()
+        if analysis and analysis.range_tightness_pct:
+            return float(analysis.range_tightness_pct)
+        return None
+
+    def get_days_until_earnings(self, obj):
+        if obj.next_earnings_date:
+            from datetime import date
+            delta = obj.next_earnings_date - date.today()
+            return delta.days if delta.days >= 0 else None
         return None
 
 

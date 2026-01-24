@@ -17,6 +17,16 @@ class Stock(models.Model):
     name = models.CharField(max_length=100)
     stock_type = models.CharField(max_length=10, choices=STOCK_TYPE_CHOICES)
     is_active = models.BooleanField(default=True)
+
+    # Earnings calendar
+    next_earnings_date = models.DateField(null=True, blank=True)
+    earnings_time = models.CharField(
+        max_length=10,
+        choices=[('BMO', 'Before Market Open'), ('AMC', 'After Market Close'), ('TBD', 'TBD')],
+        null=True,
+        blank=True
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -141,6 +151,21 @@ class ATRAnalysis(models.Model):
         max_length=10,
         choices=PROBABILITY_CHOICES,
         default='LOW'
+    )
+
+    # Confidence score (0-100) - composite of multiple factors
+    confidence_score = models.IntegerField(
+        default=0,
+        help_text="0-100 composite score: tightness + volume + days"
+    )
+
+    # Range tightness (how far below ATR)
+    range_tightness_pct = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="How much below ATR the daily range is (%)"
     )
 
     # Price context

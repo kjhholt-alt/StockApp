@@ -35,6 +35,12 @@ export function StockCard({ stock, onClick }: StockCardProps) {
     return `${sign}${percent.toFixed(2)}%`;
   };
 
+  const getConfidenceColor = (score: number) => {
+    if (score >= 70) return 'text-red-600';
+    if (score >= 40) return 'text-amber-600';
+    return 'text-gray-500';
+  };
+
   return (
     <div
       className={`
@@ -51,14 +57,20 @@ export function StockCard({ stock, onClick }: StockCardProps) {
           <h3 className="text-lg font-bold text-gray-900">{stock.symbol}</h3>
           <p className="text-sm text-gray-500 truncate max-w-[150px]">{stock.name}</p>
         </div>
-        <span
-          className={`
-            px-2 py-1 text-xs font-semibold rounded-full border
-            ${getProbabilityColor(stock.breakout_probability)}
-          `}
-        >
-          {stock.breakout_probability}
-        </span>
+        <div className="text-right">
+          <span
+            className={`
+              px-2 py-1 text-xs font-semibold rounded-full border
+              ${getProbabilityColor(stock.breakout_probability)}
+            `}
+          >
+            {stock.breakout_probability}
+          </span>
+          {/* Confidence Score */}
+          <div className={`text-xs mt-1 font-medium ${getConfidenceColor(stock.confidence_score)}`}>
+            Score: {stock.confidence_score}/100
+          </div>
+        </div>
       </div>
 
       {/* Price */}
@@ -76,8 +88,8 @@ export function StockCard({ stock, onClick }: StockCardProps) {
         </div>
       </div>
 
-      {/* Consolidation Status */}
-      <div className="grid grid-cols-2 gap-2 text-sm">
+      {/* Key Metrics Grid */}
+      <div className="grid grid-cols-2 gap-2 text-sm mb-3">
         <div>
           <span className="text-gray-500">Tight Days:</span>
           <span className={`ml-1 font-semibold ${stock.consecutive_tight_days >= 3 ? 'text-amber-600' : ''}`}>
@@ -90,10 +102,30 @@ export function StockCard({ stock, onClick }: StockCardProps) {
             {stock.atr ? `$${stock.atr.toFixed(2)}` : '-'}
           </span>
         </div>
+        <div>
+          <span className="text-gray-500">RVOL:</span>
+          <span className={`ml-1 font-semibold ${stock.volume_spike ? 'text-purple-600' : ''}`}>
+            {stock.rvol_display || '-'}
+          </span>
+        </div>
+        <div>
+          <span className="text-gray-500">Range:</span>
+          <span className="ml-1 font-semibold">
+            {stock.daily_range ? `$${stock.daily_range.toFixed(2)}` : '-'}
+          </span>
+        </div>
       </div>
 
+      {/* Earnings Warning */}
+      {stock.days_until_earnings !== null && stock.days_until_earnings <= 14 && (
+        <div className="mb-3 px-2 py-1 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
+          <span className="mr-1">📅</span>
+          Earnings in {stock.days_until_earnings} day{stock.days_until_earnings !== 1 ? 's' : ''}
+        </div>
+      )}
+
       {/* Status Badges */}
-      <div className="mt-3 flex gap-2 flex-wrap">
+      <div className="flex gap-2 flex-wrap">
         {stock.is_consolidating && (
           <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs rounded-full">
             Consolidating
@@ -102,6 +134,11 @@ export function StockCard({ stock, onClick }: StockCardProps) {
         {stock.volume_spike && (
           <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs rounded-full">
             Volume Spike
+          </span>
+        )}
+        {stock.range_tightness_pct && stock.range_tightness_pct > 20 && (
+          <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">
+            Tight Range
           </span>
         )}
         <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">

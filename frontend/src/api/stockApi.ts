@@ -9,6 +9,9 @@ import type {
   Alert,
   Notification,
   AlertSummary,
+  AuthState,
+  User,
+  WatchlistItem,
 } from '../types/stock';
 
 const API_BASE = '/api';
@@ -18,7 +21,23 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
 });
+
+// Auth
+export async function login(username: string, password: string): Promise<{ user: User; message: string }> {
+  const response = await api.post('/users/login/', { username, password });
+  return response.data;
+}
+
+export async function logout(): Promise<void> {
+  await api.post('/users/logout/');
+}
+
+export async function getCurrentUser(): Promise<AuthState> {
+  const response = await api.get<AuthState>('/users/me/');
+  return response.data;
+}
 
 // Dashboard
 export async function fetchDashboard(): Promise<DashboardSummary> {
@@ -112,6 +131,26 @@ export async function markAllNotificationsRead(): Promise<{ marked_read: number 
 export async function fetchUnreadNotificationCount(): Promise<{ unread_count: number }> {
   const response = await api.get<{ unread_count: number }>('/notifications/unread_count/');
   return response.data;
+}
+
+// Watchlist
+export async function fetchWatchlist(): Promise<WatchlistItem[]> {
+  const response = await api.get<WatchlistItem[]>('/users/watchlist/');
+  return response.data;
+}
+
+export async function addToWatchlist(symbol: string, tag: string = 'WATCHING', notes: string = ''): Promise<WatchlistItem> {
+  const response = await api.post<WatchlistItem>('/users/watchlist/', { symbol, tag, notes });
+  return response.data;
+}
+
+export async function updateWatchlistTag(itemId: number, tag: string): Promise<WatchlistItem> {
+  const response = await api.post<WatchlistItem>(`/users/watchlist/${itemId}/update_tag/`, { tag });
+  return response.data;
+}
+
+export async function removeFromWatchlist(itemId: number): Promise<void> {
+  await api.delete(`/users/watchlist/${itemId}/`);
 }
 
 // Data Refresh

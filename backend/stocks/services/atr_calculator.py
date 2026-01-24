@@ -133,6 +133,22 @@ class ATRCalculator:
             is_consolidating
         )
 
+        # Calculate range tightness (how far below ATR)
+        range_tightness_pct = None
+        if latest_price.atr_14 and latest_price.daily_range:
+            range_tightness_pct = (
+                (latest_price.atr_14 - latest_price.daily_range) /
+                latest_price.atr_14 * 100
+            )
+
+        # Calculate confidence score (0-100)
+        confidence_score = self._calculate_confidence_score(
+            consecutive_tight_days,
+            volume_ratio,
+            range_tightness_pct,
+            is_consolidating
+        )
+
         # Determine breakout probability
         breakout_probability = self._determine_probability(
             consecutive_tight_days,
@@ -154,6 +170,8 @@ class ATRCalculator:
                 'is_consolidating': is_consolidating,
                 'volume_spike_detected': volume_spike,
                 'breakout_probability': breakout_probability,
+                'confidence_score': confidence_score,
+                'range_tightness_pct': range_tightness_pct,
                 'price_at_analysis': latest_price.close,
             }
         )
@@ -270,6 +288,41 @@ class ATRCalculator:
                 return 'HIGH'
             return 'MEDIUM'
         return 'LOW'
+
+    def _calculate_confidence_score(
+        self,
+        consecutive_tight_days: int,
+        volume_ratio: Optional[Decimal],
+        range_tightness_pct: Optional[Decimal],
+        is_consolidating: bool
+    ) -> int:
+        """
+        Calculate a 0-100 confidence score for breakout potential.
+
+        Components:
+        - Consecutive tight days: up to 40 points (10 per day, max 4 days)
+        - Volume ratio: up to 30 points (proportional to ratio)
+        - Range tightness: up to 30 points (tighter = higher)
+        """
+        score = 0
+
+        # Tight days component (max 40 points)
+        tight_days_score = min(consecutive_tight_days * 10, 40)
+        score += tight_days_score
+
+        # Volume ratio component (max 30 points)
+        if volume_ratio:
+            # Scale: 1.0 = 10pts, 1.5 = 20pts, 2.0+ = 30pts
+            vol_score = min(float(volume_ratio) * 15, 30)
+            score += int(vol_score)
+
+        # Range tightness component (max 30 points)
+        if range_tightness_pct and range_tightness_pct > 0:
+            # If range is 30%+ below ATR, full points
+            tight_score = min(float(range_tightness_pct), 30)
+            score += int(tight_score)
+
+        return min(score, 100)
 
     def get_latest_analysis(self, stock: Stock) -> Optional[ATRAnalysis]:
         """Get the most recent analysis for a stock."""
