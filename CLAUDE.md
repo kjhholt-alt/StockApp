@@ -108,9 +108,28 @@ See `.env.example` for required configuration:
 - `ALERT_RECIPIENT_EMAIL` - Email to receive alerts
 
 ## Future Enhancements
+
+### Quick Wins (High Value, Low Effort)
+- [ ] **Relative Volume (RVOL)** - Show "150% of avg" instead of raw spike detection
+- [ ] **Intraday Range Highlighting** - Color-code when within bottom quartile of ATR
+- [ ] **Earnings Calendar Integration** - Display upcoming earnings dates on watchlist
+- [ ] **Watchlist Tags** - Color-coded labels: "Setting Up", "Breaking Out", "False Breakout"
+
+### High Impact Features
+- [ ] **Auto Support/Resistance Detection** - AI-powered key price level identification
+- [ ] **Multi-Timeframe Analysis** - Confirm breakouts on 5min/15min/hourly/daily
+- [ ] **Custom Alert Severity** - Critical/Warning/Info levels with quiet hours
+- [ ] **Breakout Confidence Score** - 0-100 composite score explaining the rating
+
+### Medium Priority
+- [ ] **Bollinger Bands + MACD** - Additional indicators to complement ATR
+- [ ] **SMS + Push Notifications** - Beyond email for faster alerts
+- [ ] **Performance Tracking** - Track which alerts led to profitable moves
+- [ ] **Volume Profile Visualization** - Show volume at different price levels
+- [ ] **Chart Pattern Recognition** - Detect wedges, triangles, head-and-shoulders
+
+### Platform Features
 - [ ] Real-time price updates via WebSocket
-- [ ] Custom watchlists
-- [ ] Mobile notifications (push)
+- [ ] User authentication & personal watchlists
 - [ ] Backtesting for strategy validation
-- [ ] Additional technical indicators
-- [ ] User authentication
+- [ ] Community signal sharing (optional social layer)
