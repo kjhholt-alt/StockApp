@@ -127,6 +127,9 @@ class DashboardStockSerializer(serializers.ModelSerializer):
     rvol_display = serializers.SerializerMethodField()
     range_tightness_pct = serializers.SerializerMethodField()
     days_until_earnings = serializers.SerializerMethodField()
+    current_volume = serializers.SerializerMethodField()
+    avg_volume_20d = serializers.SerializerMethodField()
+    recent_prices = serializers.SerializerMethodField()
 
     class Meta:
         model = Stock
@@ -136,7 +139,8 @@ class DashboardStockSerializer(serializers.ModelSerializer):
             'atr', 'daily_range', 'consecutive_tight_days',
             'is_consolidating', 'volume_spike', 'breakout_probability',
             'confidence_score', 'rvol_display', 'range_tightness_pct',
-            'next_earnings_date', 'days_until_earnings'
+            'next_earnings_date', 'days_until_earnings',
+            'current_volume', 'avg_volume_20d', 'recent_prices'
         ]
 
     def get_current_price(self, obj):
@@ -202,6 +206,26 @@ class DashboardStockSerializer(serializers.ModelSerializer):
             delta = obj.next_earnings_date - date.today()
             return delta.days if delta.days >= 0 else None
         return None
+
+    def get_current_volume(self, obj):
+        analysis = obj.atr_analyses.first()
+        if analysis and analysis.current_volume:
+            return int(analysis.current_volume)
+        return None
+
+    def get_avg_volume_20d(self, obj):
+        analysis = obj.atr_analyses.first()
+        if analysis and analysis.avg_volume_20d:
+            return int(analysis.avg_volume_20d)
+        return None
+
+    def get_recent_prices(self, obj):
+        """Get last 5 days of closing prices for sparkline chart"""
+        prices = list(obj.price_data.all()[:5])
+        if prices:
+            # Return in chronological order (oldest first) for sparkline
+            return [float(p.close) for p in reversed(prices)]
+        return []
 
 
 class DashboardSummarySerializer(serializers.Serializer):

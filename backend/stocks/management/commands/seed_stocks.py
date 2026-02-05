@@ -21,6 +21,7 @@ class Command(BaseCommand):
         'SPY': ('SPDR S&P 500 ETF', 'INDEX'),
         'QQQ': ('Invesco QQQ Trust', 'INDEX'),
         'IWM': ('iShares Russell 2000 ETF', 'INDEX'),
+        'U': ('Unity Software Inc.', 'OTHER'),
     }
 
     def handle(self, *args, **options):

@@ -7,6 +7,38 @@ interface StockCardProps {
   onClick?: () => void;
 }
 
+// Mini Sparkline component
+function Sparkline({ data, width = 60, height = 20 }: { data: number[]; width?: number; height?: number }) {
+  if (!data || data.length < 2) return null;
+
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+
+  // Calculate points for the path
+  const points = data.map((value, i) => {
+    const x = (i / (data.length - 1)) * width;
+    const y = height - ((value - min) / range) * height;
+    return `${x},${y}`;
+  });
+
+  const pathD = `M ${points.join(' L ')}`;
+  const isPositive = data[data.length - 1] >= data[0];
+
+  return (
+    <svg width={width} height={height} className="inline-block">
+      <path
+        d={pathD}
+        fill="none"
+        stroke={isPositive ? '#22c55e' : '#ef4444'}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function StockCard({ stock, onClick }: StockCardProps) {
   const getProbabilityColor = (probability: string) => {
     switch (probability) {
@@ -41,6 +73,21 @@ export function StockCard({ stock, onClick }: StockCardProps) {
     return 'text-gray-500';
   };
 
+  // Format volume as readable string (e.g., 45.2M, 1.5B)
+  const formatVolume = (volume: number | null) => {
+    if (volume === null) return '-';
+    if (volume >= 1_000_000_000) {
+      return `${(volume / 1_000_000_000).toFixed(1)}B`;
+    }
+    if (volume >= 1_000_000) {
+      return `${(volume / 1_000_000).toFixed(1)}M`;
+    }
+    if (volume >= 1_000) {
+      return `${(volume / 1_000).toFixed(1)}K`;
+    }
+    return volume.toString();
+  };
+
   return (
     <div
       className={`
@@ -66,25 +113,52 @@ export function StockCard({ stock, onClick }: StockCardProps) {
           >
             {stock.breakout_probability}
           </span>
-          {/* Confidence Score */}
-          <div className={`text-xs mt-1 font-medium ${getConfidenceColor(stock.confidence_score)}`}>
-            Score: {stock.confidence_score}/100
-          </div>
         </div>
       </div>
 
-      {/* Price */}
-      <div className="mb-3">
-        <div className="text-2xl font-bold text-gray-900">
-          {formatPrice(stock.current_price)}
+      {/* Price with Sparkline */}
+      <div className="mb-3 flex justify-between items-start">
+        <div>
+          <div className="text-2xl font-bold text-gray-900">
+            {formatPrice(stock.current_price)}
+          </div>
+          <div className={`text-sm ${getPriceChangeColor(stock.price_change)}`}>
+            {stock.price_change !== null && (
+              <>
+                {stock.price_change >= 0 ? '+' : ''}
+                {stock.price_change?.toFixed(2)} ({formatPercent(stock.price_change_percent)})
+              </>
+            )}
+          </div>
         </div>
-        <div className={`text-sm ${getPriceChangeColor(stock.price_change)}`}>
-          {stock.price_change !== null && (
-            <>
-              {stock.price_change >= 0 ? '+' : ''}
-              {stock.price_change?.toFixed(2)} ({formatPercent(stock.price_change_percent)})
-            </>
-          )}
+        {/* 5-Day Sparkline */}
+        {stock.recent_prices && stock.recent_prices.length >= 2 && (
+          <div className="flex flex-col items-end">
+            <Sparkline data={stock.recent_prices} width={60} height={24} />
+            <span className="text-[10px] text-gray-400 mt-0.5">5-day</span>
+          </div>
+        )}
+      </div>
+
+      {/* Volume Display */}
+      <div className="mb-3 p-2 bg-gray-50 dark:bg-gray-700 rounded text-sm">
+        <div className="flex justify-between items-center">
+          <span className="text-gray-500">Volume:</span>
+          <span className={`font-semibold ${stock.volume_spike ? 'text-purple-600' : 'text-gray-900 dark:text-gray-100'}`}>
+            {formatVolume(stock.current_volume)}
+          </span>
+        </div>
+        <div className="flex justify-between items-center mt-1">
+          <span className="text-gray-500">Avg (20d):</span>
+          <span className="font-semibold text-gray-600 dark:text-gray-300">
+            {formatVolume(stock.avg_volume_20d)}
+          </span>
+        </div>
+        <div className="flex justify-between items-center mt-1 pt-1 border-t border-gray-200 dark:border-gray-600">
+          <span className="text-gray-500">RVOL:</span>
+          <span className={`font-bold ${stock.volume_spike ? 'text-purple-600' : 'text-gray-700 dark:text-gray-200'}`}>
+            {stock.rvol_display || '-'}
+          </span>
         </div>
       </div>
 
@@ -103,15 +177,15 @@ export function StockCard({ stock, onClick }: StockCardProps) {
           </span>
         </div>
         <div>
-          <span className="text-gray-500">RVOL:</span>
-          <span className={`ml-1 font-semibold ${stock.volume_spike ? 'text-purple-600' : ''}`}>
-            {stock.rvol_display || '-'}
-          </span>
-        </div>
-        <div>
           <span className="text-gray-500">Range:</span>
           <span className="ml-1 font-semibold">
             {stock.daily_range ? `$${stock.daily_range.toFixed(2)}` : '-'}
+          </span>
+        </div>
+        <div>
+          <span className="text-gray-500">Score:</span>
+          <span className={`ml-1 font-semibold ${getConfidenceColor(stock.confidence_score)}`}>
+            {stock.confidence_score}/100
           </span>
         </div>
       </div>

@@ -9,7 +9,6 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  ReferenceLine,
 } from 'recharts';
 import { format, parseISO } from 'date-fns';
 import type { PriceData } from '../types/stock';

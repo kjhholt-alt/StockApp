@@ -14,7 +14,8 @@ import type {
   WatchlistItem,
 } from '../types/stock';
 
-const API_BASE = '/api';
+// Use VITE_API_URL for production, /api for development (proxied by Vite)
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 const api = axios.create({
   baseURL: API_BASE,
@@ -47,8 +48,8 @@ export async function fetchDashboard(): Promise<DashboardSummary> {
 
 // Stocks
 export async function fetchStocks(): Promise<StockDetail[]> {
-  const response = await api.get<StockDetail[]>('/stocks/');
-  return response.data;
+  const response = await api.get<PaginatedResponse<StockDetail>>('/stocks/');
+  return response.data.results;
 }
 
 export async function fetchStock(symbol: string): Promise<StockDetail> {
@@ -80,14 +81,22 @@ export async function fetchHighProbabilityStocks(): Promise<ATRAnalysis[]> {
   return response.data;
 }
 
+// Paginated response type
+interface PaginatedResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}
+
 // Alerts
 export async function fetchAlerts(params?: {
   is_read?: boolean;
   type?: string;
   symbol?: string;
 }): Promise<Alert[]> {
-  const response = await api.get<Alert[]>('/alerts/', { params });
-  return response.data;
+  const response = await api.get<PaginatedResponse<Alert>>('/alerts/', { params });
+  return response.data.results;
 }
 
 export async function markAlertRead(alertId: number): Promise<void> {
@@ -115,8 +124,8 @@ export async function fetchNotifications(params?: {
   type?: string;
   symbol?: string;
 }): Promise<Notification[]> {
-  const response = await api.get<Notification[]>('/notifications/', { params });
-  return response.data;
+  const response = await api.get<PaginatedResponse<Notification>>('/notifications/', { params });
+  return response.data.results;
 }
 
 export async function markNotificationRead(notificationId: number): Promise<void> {
@@ -162,5 +171,218 @@ export async function refreshData(symbol?: string): Promise<{
   const response = await api.post('/refresh/', null, {
     params: symbol ? { symbol } : undefined,
   });
+  return response.data;
+}
+
+// Backtest API
+export interface BacktestAlertResult {
+  period_days: number;
+  total_alerts: number;
+  by_type: Record<string, {
+    total: number;
+    breakouts: number;
+    non_breakouts: number;
+    pending: number;
+    avg_move_pct: number;
+  }>;
+  by_stock: Record<string, {
+    name: string;
+    total: number;
+    breakouts: number;
+    non_breakouts: number;
+    pending: number;
+    avg_move_pct: number;
+  }>;
+  detailed_alerts: Array<{
+    id: number;
+    symbol: string;
+    stock_name: string;
+    alert_type: string;
+    alert_type_display: string;
+    message: string;
+    created_at: string;
+    status: 'BREAKOUT' | 'NO_BREAKOUT' | 'PENDING';
+    price_at_alert: number | null;
+    max_price_after: number | null;
+    min_price_after: number | null;
+    max_gain_pct: number | null;
+    max_loss_pct: number | null;
+    days_to_breakout: number | null;
+    outcome_details: string;
+  }>;
+  summary: {
+    total_breakouts: number;
+    total_non_breakouts: number;
+    pending_evaluation: number;
+    win_rate: number;
+    avg_gain_pct: number;
+    avg_loss_pct: number;
+    best_gain_pct: number;
+    worst_loss_pct: number;
+  };
+}
+
+export interface BacktestPatternResult {
+  period_days: number;
+  total_patterns: number;
+  patterns: Array<{
+    symbol: string;
+    stock_name: string;
+    start_date: string;
+    tight_days: number;
+    probability: string;
+    confidence_score: number;
+    price_at_start: number | null;
+    max_price_after: number | null;
+    max_gain_pct: number | null;
+    days_to_max: number | null;
+    had_breakout: boolean;
+  }>;
+  by_probability: Record<string, {
+    total: number;
+    breakouts: number;
+    accuracy: number;
+    avg_gain: number;
+  }>;
+  by_tight_days: Record<string, {
+    total: number;
+    breakouts: number;
+    accuracy: number;
+    avg_gain: number;
+  }>;
+  summary: {
+    overall_accuracy: number;
+    high_prob_accuracy: number;
+    avg_days_to_breakout: number;
+  };
+}
+
+export interface HistoricalDayResult {
+  date: string;
+  total_stocks?: number;
+  consolidating?: number;
+  high_probability?: number;
+  error?: string;
+  stocks: Array<{
+    symbol: string;
+    name: string;
+    price: number | null;
+    atr: number;
+    daily_range: number;
+    consecutive_tight_days: number;
+    is_consolidating: boolean;
+    volume_spike: boolean;
+    breakout_probability: string;
+    confidence_score: number;
+    future_prices: Array<{
+      date: string;
+      close: number;
+      change_pct: number;
+    }>;
+    max_future_gain: number;
+  }>;
+}
+
+export async function fetchBacktestAlerts(days: number = 90): Promise<BacktestAlertResult> {
+  const response = await api.get<BacktestAlertResult>('/backtest/alerts/', {
+    params: { days },
+  });
+  return response.data;
+}
+
+export async function fetchBacktestPatterns(days: number = 90): Promise<BacktestPatternResult> {
+  const response = await api.get<BacktestPatternResult>('/backtest/patterns/', {
+    params: { days },
+  });
+  return response.data;
+}
+
+export async function fetchHistoricalDay(dateStr: string): Promise<HistoricalDayResult> {
+  const response = await api.get<HistoricalDayResult>(`/backtest/day/${dateStr}/`);
+  return response.data;
+}
+
+export async function fetchAvailableDates(): Promise<{ dates: string[] }> {
+  const response = await api.get<{ dates: string[] }>('/backtest/dates/');
+  return response.data;
+}
+
+// AI Optimization API
+export interface AIRecommendation {
+  category: string;
+  content: string;
+}
+
+export interface AIOptimizationResult {
+  success?: boolean;
+  error?: string;
+  period_days?: number;
+  current_config?: {
+    atr_period: number;
+    consolidation_threshold_days: number;
+    volume_spike_multiplier: number;
+    volume_avg_period: number;
+    breakout_threshold_pct: number;
+  };
+  performance_summary?: {
+    alert_win_rate: number;
+    pattern_accuracy: number;
+    high_prob_accuracy: number;
+    total_alerts: number;
+    total_patterns: number;
+    avg_gain: number;
+    avg_loss: number;
+  };
+  ai_analysis?: string;
+  recommendations?: AIRecommendation[];
+  raw_data?: {
+    by_probability: Record<string, any>;
+    by_tight_days: Record<string, any>;
+    by_alert_type: Record<string, any>;
+  };
+}
+
+export interface AIQuickInsights {
+  success?: boolean;
+  error?: string;
+  insights?: string;
+  data_summary?: {
+    overall_accuracy: number;
+    high_prob_accuracy: number;
+    total_patterns: number;
+  };
+}
+
+export interface AISuggestion {
+  parameter: string;
+  current_value: any;
+  suggested_value: any;
+  reason: string;
+  confidence: string;
+}
+
+export interface AISuggestResult {
+  success?: boolean;
+  error?: string;
+  suggestions?: AISuggestion[];
+  data_points_analyzed?: number;
+}
+
+export async function fetchAIOptimization(days: number = 90): Promise<AIOptimizationResult> {
+  const response = await api.get<AIOptimizationResult>('/ai/optimize/', {
+    params: { days },
+  });
+  return response.data;
+}
+
+export async function fetchAIQuickInsights(days: number = 30): Promise<AIQuickInsights> {
+  const response = await api.get<AIQuickInsights>('/ai/insights/', {
+    params: { days },
+  });
+  return response.data;
+}
+
+export async function fetchAISuggestions(): Promise<AISuggestResult> {
+  const response = await api.get<AISuggestResult>('/ai/suggest/');
   return response.data;
 }

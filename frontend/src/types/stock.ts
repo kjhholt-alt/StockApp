@@ -96,6 +96,9 @@ export interface DashboardStock {
   range_tightness_pct: number | null;
   next_earnings_date: string | null;
   days_until_earnings: number | null;
+  current_volume: number | null;
+  avg_volume_20d: number | null;
+  recent_prices: number[];
 }
 
 export interface DashboardSummary {

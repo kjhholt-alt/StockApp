@@ -18,7 +18,7 @@ from .serializers import (
     DashboardStockSerializer,
     DashboardSummarySerializer,
 )
-from .services import DataFetcher, ATRCalculator, AlertService
+from .services import DataFetcher, ATRCalculator, AlertService, BacktestService, AIOptimizer
 
 
 class StockViewSet(viewsets.ReadOnlyModelViewSet):
@@ -207,4 +207,71 @@ class RefreshDataView(APIView):
             alerts = alert_service.process_all_analyses()
             results['alerts_created'] = len(alerts)
 
+        return Response(results)
+
+
+class BacktestAlertPerformanceView(APIView):
+    """Get performance analysis of historical alerts."""
+
+    def get(self, request):
+        days = int(request.query_params.get('days', 90))
+        service = BacktestService()
+        results = service.analyze_alert_performance(days_back=days)
+        return Response(results)
+
+
+class BacktestConsolidationPatternsView(APIView):
+    """Get analysis of historical consolidation patterns."""
+
+    def get(self, request):
+        days = int(request.query_params.get('days', 90))
+        service = BacktestService()
+        results = service.analyze_consolidation_patterns(days_back=days)
+        return Response(results)
+
+
+class BacktestHistoricalDayView(APIView):
+    """Get system snapshot for a specific historical date."""
+
+    def get(self, request, date_str):
+        service = BacktestService()
+        results = service.get_historical_day_analysis(date_str)
+        return Response(results)
+
+
+class BacktestAvailableDatesView(APIView):
+    """Get list of dates with available analysis data."""
+
+    def get(self, request):
+        service = BacktestService()
+        dates = service.get_available_dates()
+        return Response({'dates': dates})
+
+
+class AIOptimizeView(APIView):
+    """Get AI-powered optimization recommendations."""
+
+    def get(self, request):
+        days = int(request.query_params.get('days', 90))
+        optimizer = AIOptimizer()
+        results = optimizer.analyze_and_optimize(days_back=days)
+        return Response(results)
+
+
+class AIQuickInsightsView(APIView):
+    """Get quick AI insights on performance."""
+
+    def get(self, request):
+        days = int(request.query_params.get('days', 30))
+        optimizer = AIOptimizer()
+        results = optimizer.get_quick_insights(days_back=days)
+        return Response(results)
+
+
+class AISuggestParametersView(APIView):
+    """Get AI-suggested parameter changes."""
+
+    def get(self, request):
+        optimizer = AIOptimizer()
+        results = optimizer.suggest_parameter_changes()
         return Response(results)

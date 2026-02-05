@@ -2,6 +2,209 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Dark mode styles */
+.dark {
+  color-scheme: dark;
+}
+
+.dark body {
+  background-color: #111827;
+  color: #f3f4f6;
+}
+
+.dark .bg-gray-100 {
+  background-color: #111827 !important;
+}
+
+.dark .bg-white {
+  background-color: #1f2937 !important;
+}
+
+.dark .bg-gray-50 {
+  background-color: #1f2937 !important;
+}
+
+.dark .text-gray-900 {
+  color: #f9fafb !important;
+}
+
+.dark .text-gray-800 {
+  color: #f3f4f6 !important;
+}
+
+.dark .text-gray-700 {
+  color: #e5e7eb !important;
+}
+
+.dark .text-gray-600 {
+  color: #d1d5db !important;
+}
+
+.dark .text-gray-500 {
+  color: #9ca3af !important;
+}
+
+.dark .border-gray-200 {
+  border-color: #374151 !important;
+}
+
+.dark .border-gray-300 {
+  border-color: #4b5563 !important;
+}
+
+.dark .shadow-sm,
+.dark .shadow,
+.dark .shadow-md,
+.dark .shadow-lg,
+.dark .shadow-xl {
+  --tw-shadow-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Dark mode for colored backgrounds */
+.dark .bg-amber-50 {
+  background-color: #451a03 !important;
+}
+
+.dark .bg-red-50 {
+  background-color: #450a0a !important;
+}
+
+.dark .bg-blue-50 {
+  background-color: #172554 !important;
+}
+
+.dark .bg-green-50 {
+  background-color: #052e16 !important;
+}
+
+.dark .bg-yellow-50 {
+  background-color: #422006 !important;
+}
+
+.dark .bg-purple-50 {
+  background-color: #2e1065 !important;
+}
+
+/* Dark mode text colors for alerts */
+.dark .text-amber-700,
+.dark .text-amber-800 {
+  color: #fbbf24 !important;
+}
+
+.dark .text-red-700,
+.dark .text-red-800 {
+  color: #f87171 !important;
+}
+
+.dark .text-blue-700,
+.dark .text-blue-800 {
+  color: #60a5fa !important;
+}
+
+.dark .text-green-600,
+.dark .text-green-700 {
+  color: #4ade80 !important;
+}
+
+.dark .text-yellow-800 {
+  color: #fde047 !important;
+}
+
+.dark .text-purple-700 {
+  color: #c084fc !important;
+}
+
+/* Dark mode borders */
+.dark .border-amber-200,
+.dark .border-amber-300 {
+  border-color: #92400e !important;
+}
+
+.dark .border-red-200,
+.dark .border-red-300 {
+  border-color: #991b1b !important;
+}
+
+.dark .border-blue-200,
+.dark .border-blue-300 {
+  border-color: #1e40af !important;
+}
+
+.dark .border-yellow-200 {
+  border-color: #854d0e !important;
+}
+
+/* Dark mode for status badges - high contrast */
+.dark .bg-amber-100 {
+  background-color: #92400e !important;
+}
+
+.dark .bg-red-100 {
+  background-color: #991b1b !important;
+}
+
+.dark .bg-green-100 {
+  background-color: #166534 !important;
+}
+
+.dark .bg-blue-100 {
+  background-color: #1e40af !important;
+}
+
+.dark .bg-purple-100 {
+  background-color: #6b21a8 !important;
+}
+
+.dark .bg-gray-100 {
+  background-color: #4b5563 !important;
+}
+
+.dark .bg-gray-200 {
+  background-color: #374151 !important;
+}
+
+/* Dark mode badge text - ensure high contrast */
+.dark .text-green-800,
+.dark .text-green-700 {
+  color: #86efac !important;
+}
+
+.dark .text-amber-800,
+.dark .text-amber-700 {
+  color: #fcd34d !important;
+}
+
+.dark .text-red-800 {
+  color: #fca5a5 !important;
+}
+
+.dark .text-blue-800,
+.dark .text-blue-700 {
+  color: #93c5fd !important;
+}
+
+.dark .text-purple-600,
+.dark .text-purple-700 {
+  color: #d8b4fe !important;
+}
+
+/* Dark mode border colors for badges */
+.dark .border-green-300 {
+  border-color: #22c55e !important;
+}
+
+.dark .border-amber-300 {
+  border-color: #fbbf24 !important;
+}
+
+.dark .border-red-300 {
+  border-color: #f87171 !important;
+}
+
+.dark .border-blue-300 {
+  border-color: #60a5fa !important;
+}
+
 /* Custom scrollbar styles */
 ::-webkit-scrollbar {
   width: 8px;

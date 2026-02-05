@@ -9,6 +9,8 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
 from stocks.models import Stock
 from .models import UserProfile, UserWatchlist
@@ -21,10 +23,12 @@ from .serializers import (
 )
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class LoginView(APIView):
     """Handle user login."""
 
     permission_classes = [AllowAny]
+    authentication_classes = []  # No auth required for login
 
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
