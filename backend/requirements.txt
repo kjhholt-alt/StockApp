@@ -24,3 +24,6 @@ numpy>=2.0
 # Utilities
 python-dotenv>=1.0,<2.0
 requests>=2.31,<3.0
+
+# AI
+anthropic>=0.18.0
